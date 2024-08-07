@@ -9,7 +9,6 @@ trait CanTakeHit {
     fn take_hit(&mut self, damage: i32);
 }
 
-#[derive(Debug)]
 struct Goblin {
     health: i32,
     damage: i32,
@@ -31,11 +30,13 @@ impl CanHit for Goblin {
 impl CanTakeHit for Goblin {
     fn take_hit(&mut self, damage: i32) {
         println!("Goblin got hit");
-        self.health -= damage;
+        self.health = std::cmp::max(0, self.health - damage);
+        if self.health == 0 {
+            println!("Goblin game over");
+        }
     }
 }
 
-#[derive(Debug)]
 struct Orc {
     health: i32,
     damage: i32,
@@ -57,11 +58,13 @@ impl CanHit for Orc {
 impl CanTakeHit for Orc {
     fn take_hit(&mut self, damage: i32) {
         println!("Orc got hit");
-        self.health -= damage;
+        self.health = std::cmp::max(0, self.health - damage);
+        if self.health == 0 {
+            println!("Orc game over");
+        }
     }
 }
 
-#[derive(Debug)]
 struct Building {
     health: i32,
 }
@@ -75,7 +78,10 @@ impl Building {
 impl CanTakeHit for Building {
     fn take_hit(&mut self, damage: i32) {
         println!("Building got hit");
-        self.health -= damage;
+        self.health = std::cmp::max(0, self.health - damage);
+        if self.health == 0 {
+            println!("Building destroyed");
+        }
     }
 }
 
@@ -100,7 +106,7 @@ fn main() {
         attacker.hit(defender.as_mut());
     }
 
-    println!("Fight ends");
+    println!("\nFight ends");
 }
 
 #[cfg(test)]
@@ -129,5 +135,17 @@ mod tests {
         let mut building = Building::new();
         goblin.hit(&mut building);
         assert_eq!(building.health, 13);
+    }
+
+    #[test]
+    fn test_health_never_below_zero() {
+        let orc = Orc::new();
+        let mut goblin = Goblin::new();
+        orc.hit(&mut goblin);
+        orc.hit(&mut goblin);
+        orc.hit(&mut goblin);
+        orc.hit(&mut goblin);
+        orc.hit(&mut goblin);
+        assert_eq!(goblin.health, 0);
     }
 }
